@@ -1,0 +1,49 @@
+networks:
+  mindease:
+    driver: bridge
+
+services:
+
+  db:
+    image: postgres:14
+    container_name: db_mindease
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: mindease
+    tty: true
+    restart: unless-stopped
+    ports:
+      - 5433:5432/tcp
+    networks:
+      - mindease
+    
+  api:
+    build:
+      context: ./mindease_api
+      dockerfile: Dockerfile.local
+    container_name: api_mindease
+    tty: true
+    ports:
+      - 8882:8882/tcp
+    depends_on:
+      - db
+    volumes:
+      - ./mindease_api/:/var/www/html
+    networks:
+      - mindease
+
+  frontend:
+    build:
+      context: ./mindease
+      dockerfile: Dockerfile.local
+    container_name: front_mindease
+    tty: true
+    ports:
+      - 5173:5173/tcp
+    depends_on:
+      - api
+    volumes:
+      - "./mindease/:/app"
+    networks:
+      - mindease
